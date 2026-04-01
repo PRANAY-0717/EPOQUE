@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" style={{ backgroundColor: "#030308" }}>
       <body className={`${inter.variable} ${spaceGrotesk.variable} bg-[#030308] text-white min-h-screen relative`}>
         {/* Three.js animated background — lazy loaded, never blocks paint */}
         <BackgroundWrapper />

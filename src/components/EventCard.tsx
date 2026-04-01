@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatTime, getDurationMinutes, getEventStatus, EventStatus, EventItem } from "@/lib/event-utils";
-import { Clock, MapPin, CalendarClock, ChevronRight } from "lucide-react";
+import { Clock, MapPin, CalendarClock } from "lucide-react";
 
 interface EventCardProps {
   event: EventItem;
@@ -57,8 +57,7 @@ export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
 
   return (
     <div 
-      onClick={onClick}
-      className="group h-full flex flex-col glass-panel rounded-xl md:rounded-2xl p-4 md:p-5 active:scale-[0.98] md:hover:-translate-y-1 transition-transform duration-300 cursor-pointer relative touch-manipulation"
+      className="group h-full flex flex-col glass-panel rounded-xl md:rounded-2xl p-4 md:p-5 md:hover:-translate-y-1 transition-transform duration-300 relative touch-manipulation"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-neon-blue/0 to-neon-purple/0 group-hover:from-neon-blue/10 group-hover:to-neon-purple/10 transition-colors duration-500 rounded-xl md:rounded-2xl pointer-events-none" />
       <div className="absolute -inset-[1px] bg-gradient-to-r from-neon-cyan/50 via-neon-purple/50 to-neon-red/50 opacity-0 group-hover:opacity-100 rounded-xl md:rounded-2xl blur-sm transition-opacity duration-500 z-[-1]" />
@@ -97,14 +96,13 @@ export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
       </div>
 
       {/* Footer */}
-      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/10 flex justify-between items-center relative z-10">
-        <div className="text-[10px] md:text-xs font-medium text-neon-pink">
-          {status === "upcoming" ? countdownStr : ""}
+      {status === "upcoming" && countdownStr && (
+        <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/10 relative z-10">
+          <div className="text-[10px] md:text-xs font-medium text-neon-pink">
+            {countdownStr}
+          </div>
         </div>
-        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-neon-cyan group-hover:text-black transition-colors">
-          <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
