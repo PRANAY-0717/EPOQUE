@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-blue: #00f0ff;
+  --color-neon-cyan: #0ff0fc;
+  --color-neon-purple: #8a2be2;
+  --color-neon-pink: #ff00ff;
+  --color-neon-red: #ff3366;
+  
+  --color-bg-dark: #050510;
+  --color-bg-panel: rgba(10, 10, 25, 0.6);
+  --color-bg-panel-hover: rgba(15, 15, 40, 0.8);
+
+  --font-sans: "Inter", var(--font-inter), sans-serif;
+  --font-display: "Space Grotesk", var(--font-space), "Orbitron", sans-serif;
+  
+  --shadow-neon-cyan: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+  --shadow-neon-red: 0 0 10px rgba(255, 51, 102, 0.5), 0 0 20px rgba(255, 51, 102, 0.3);
+  --shadow-neon-purple: 0 0 10px rgba(138, 43, 226, 0.5), 0 0 20px rgba(138, 43, 226, 0.3);
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Base resets & Futuristic Background */
+@layer base {
+  body {
+    @apply bg-[#030308] text-gray-100 antialiased overflow-x-hidden;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.08), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(255, 51, 102, 0.08), transparent 25%),
+      radial-gradient(circle at 50% 80%, rgba(138, 43, 226, 0.08), transparent 25%);
+    background-attachment: fixed;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-lg relative overflow-hidden;
+  }
+  .glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink;
+  }
+  .neon-border {
+    @apply border border-neon-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)];
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+/* Webkit scrollbar for futuristic feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.6);
+}
+
+/* Mobile: hide scrollbar but keep scrolling */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+}
+
+/* Safe area for notched phones */
+html {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Prevent iOS zoom on inputs */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
