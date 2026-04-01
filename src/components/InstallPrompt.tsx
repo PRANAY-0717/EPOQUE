@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download, Share } from "lucide-react";
+import { X, Smartphone, Share } from "lucide-react";
 
 export function InstallPrompt() {
   const [show, setShow] = useState(false);
@@ -68,11 +68,11 @@ export function InstallPrompt() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 border border-white/10 flex items-center justify-center">
-                  <Download className="w-5 h-5 text-neon-cyan" />
+                  <Smartphone className="w-5 h-5 text-neon-cyan" />
                 </div>
                 <div>
                   <h3 className="text-sm font-display font-bold text-white">Add to Home Screen</h3>
-                  <p className="text-[10px] text-gray-500 font-display">Quick access like an app</p>
+                  <p className="text-[10px] text-gray-500 font-display">Open instantly like an app</p>
                 </div>
               </div>
               <button onClick={handleLater} className="p-1 rounded-full hover:bg-white/5">
@@ -80,23 +80,36 @@ export function InstallPrompt() {
               </button>
             </div>
 
-            {/* Instructions */}
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 mb-5">
               {isIOS ? (
-                <div className="flex items-start gap-3">
-                  <Share className="w-5 h-5 text-neon-cyan shrink-0 mt-0.5" />
-                  <p className="text-xs text-gray-300 leading-relaxed">
-                    Tap the <span className="text-white font-medium">Share</span> button in Safari, then scroll down and tap{" "}
-                    <span className="text-white font-medium">&quot;Add to Home Screen&quot;</span>
-                  </p>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-md bg-neon-cyan/10 flex items-center justify-center text-neon-cyan text-xs font-bold shrink-0">1</div>
+                    <p className="text-xs text-gray-300">
+                      Tap the <Share className="inline w-3.5 h-3.5 text-neon-cyan" /> <span className="text-white font-medium">Share</span> button at the bottom
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-md bg-neon-cyan/10 flex items-center justify-center text-neon-cyan text-xs font-bold shrink-0">2</div>
+                    <p className="text-xs text-gray-300">
+                      Scroll down & tap <span className="text-white font-medium">&quot;Add to Home Screen&quot;</span>
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-3">
-                  <Download className="w-5 h-5 text-neon-cyan shrink-0 mt-0.5" />
-                  <p className="text-xs text-gray-300 leading-relaxed">
-                    Tap the <span className="text-white font-medium">⋮ menu</span> in Chrome, then tap{" "}
-                    <span className="text-white font-medium">&quot;Add to Home screen&quot;</span>
-                  </p>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-md bg-neon-cyan/10 flex items-center justify-center text-neon-cyan text-xs font-bold shrink-0">1</div>
+                    <p className="text-xs text-gray-300">
+                      Tap <span className="text-white font-medium text-lg leading-none">⋮</span> (3 dots) in the top-right of Chrome
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-md bg-neon-cyan/10 flex items-center justify-center text-neon-cyan text-xs font-bold shrink-0">2</div>
+                    <p className="text-xs text-gray-300">
+                      Scroll down & tap <span className="text-white font-medium">&quot;Add to home screen&quot;</span>
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
