@@ -27,10 +27,10 @@ export function DaySelector({ days, selectedIdx, onSelect }: DaySelectorProps) {
               />
             )}
             <div className="relative z-10 flex flex-col items-center gap-0.5 md:gap-1">
-              <span className={`text-xs md:text-base font-display font-medium tracking-wide ${isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-gray-400'}`}>
+              <span className={`text-sm md:text-lg font-display font-semibold tracking-wide ${isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-gray-400'}`}>
                 {d.day}
               </span>
-              <span className={`text-[10px] md:text-xs ${isActive ? 'text-neon-cyan' : 'text-gray-500'}`}>
+              <span className={`text-[11px] md:text-sm font-medium ${isActive ? 'text-neon-cyan' : 'text-gray-500'}`}>
                 {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
             </div>

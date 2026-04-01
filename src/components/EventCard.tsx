@@ -50,56 +50,56 @@ export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
   const statusConfig = {
     upcoming: { color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/50", label: "UPCOMING" },
     ongoing: { color: "text-green-400", bg: "bg-green-400/10", border: "border-green-400/50", label: "LIVE NOW" },
-    completed: { color: "text-gray-400", bg: "bg-gray-400/10", border: "border-gray-400/50", label: "COMPLETED" },
+    completed: { color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/30", label: "COMPLETED" },
   };
 
   const sc = statusConfig[status];
 
   return (
     <div 
-      className="group h-full flex flex-col glass-panel rounded-xl md:rounded-2xl p-4 md:p-5 md:hover:-translate-y-1 transition-transform duration-300 relative touch-manipulation"
+      className={`group h-full flex flex-col glass-panel rounded-xl md:rounded-2xl p-5 md:p-6 md:hover:-translate-y-1 transition-all duration-300 relative touch-manipulation ${status === "completed" ? "opacity-50" : ""}`}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-neon-blue/0 to-neon-purple/0 group-hover:from-neon-blue/10 group-hover:to-neon-purple/10 transition-colors duration-500 rounded-xl md:rounded-2xl pointer-events-none" />
       <div className="absolute -inset-[1px] bg-gradient-to-r from-neon-cyan/50 via-neon-purple/50 to-neon-red/50 opacity-0 group-hover:opacity-100 rounded-xl md:rounded-2xl blur-sm transition-opacity duration-500 z-[-1]" />
       
       {/* Header row */}
       <div className="flex justify-between items-start mb-3 md:mb-4 relative z-10">
-        <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-[6px] border text-[9px] md:text-[10px] font-display font-medium tracking-widest flex items-center gap-1.5 ${sc.bg} ${sc.border} ${sc.color}`}>
+        <div className={`px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg border text-[10px] md:text-xs font-display font-semibold tracking-widest flex items-center gap-1.5 ${sc.bg} ${sc.border} ${sc.color}`}>
           {status === "ongoing" && (
-            <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-green-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
           )}
           {sc.label}
         </div>
-        <div className="text-[10px] md:text-xs text-gray-400 flex items-center gap-1 bg-black/40 px-1.5 py-0.5 md:px-2 md:py-1 rounded-[6px] border border-white/5">
-          <CalendarClock className="w-3 h-3 md:w-3.5 md:h-3.5" />
+        <div className="text-[11px] md:text-xs text-gray-300 flex items-center gap-1.5 bg-black/40 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg border border-white/5 font-medium">
+          <CalendarClock className="w-3.5 h-3.5 md:w-4 md:h-4" />
           {duration}m
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 relative z-10">
-        <h3 className="text-base md:text-xl font-display font-bold text-white mb-1 md:mb-2 group-hover:text-neon-cyan transition-colors leading-snug">{event.name}</h3>
+        <h3 className="text-lg md:text-xl font-display font-bold text-white mb-1 md:mb-2 group-hover:text-neon-cyan transition-colors leading-snug">{event.name}</h3>
         
-        <div className="flex flex-col gap-1.5 md:gap-2 mt-3 md:mt-4 text-xs md:text-sm text-gray-300">
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-neon-blue shrink-0" />
-            <span>{formatTime(event.start)} - {formatTime(event.end)}</span>
+        <div className="flex flex-col gap-2 md:gap-2.5 mt-3 md:mt-4 text-sm md:text-base">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 md:w-[18px] md:h-[18px] text-neon-blue shrink-0" />
+            <span className="text-gray-200 font-medium">{formatTime(event.start)} - {formatTime(event.end)}</span>
           </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-neon-purple shrink-0" />
-            <span className="truncate">{event.venue}</span>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 md:w-[18px] md:h-[18px] text-neon-purple shrink-0" />
+            <span className="text-gray-200 truncate">{event.venue}</span>
           </div>
         </div>
       </div>
 
       {/* Footer */}
       {status === "upcoming" && countdownStr && (
-        <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/10 relative z-10">
-          <div className="text-[10px] md:text-xs font-medium text-neon-pink">
-            {countdownStr}
+        <div className="mt-4 md:mt-5 pt-3 md:pt-4 border-t border-white/10 relative z-10">
+          <div className="text-xs md:text-sm font-display font-semibold text-neon-pink">
+            ⏱ {countdownStr}
           </div>
         </div>
       )}

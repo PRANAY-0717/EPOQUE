@@ -18,7 +18,7 @@ export function VenueSelector({ venues, selected, onSelect }: VenueSelectorProps
             <button
               key={venue}
               onClick={() => onSelect(venue)}
-              className={`relative px-3 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-colors whitespace-nowrap active:scale-95
+              className={`relative px-4 md:px-5 py-2.5 md:py-3 rounded-full text-sm md:text-base font-medium transition-colors whitespace-nowrap active:scale-95
                 ${isActive ? 'text-white' : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20'}`}
             >
               {isActive && (
