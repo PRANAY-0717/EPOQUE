@@ -36,10 +36,10 @@ export function ScheduleClient() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ─── Restore trustee session from sessionStorage ─────
+  // ─── Restore trustee session from localStorage ─────
   useEffect(() => {
     try {
-      const stored = sessionStorage.getItem("trustee-session");
+      const stored = localStorage.getItem("trustee-session");
       if (stored) {
         setTrusteeSession(JSON.parse(stored));
       }
@@ -126,7 +126,7 @@ export function ScheduleClient() {
   };
 
   const handleTrusteeLogout = () => {
-    sessionStorage.removeItem("trustee-session");
+    localStorage.removeItem("trustee-session");
     setTrusteeSession(null);
     setIsTrusteePanelOpen(false);
   };

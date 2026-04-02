@@ -37,7 +37,7 @@ export function TrusteeAccessModal({ onClose, onVerified }: TrusteeAccessModalPr
           code: code.trim(),
           library_id: libraryId.trim(),
         };
-        sessionStorage.setItem("trustee-session", JSON.stringify(session));
+        localStorage.setItem("trustee-session", JSON.stringify(session));
         onVerified(session);
       } else {
         setError(result.error || "Verification failed.");
