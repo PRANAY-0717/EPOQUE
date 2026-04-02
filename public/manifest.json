@@ -1,0 +1,18 @@
+{
+  "name": "Epoque@Prastuti '26",
+  "short_name": "Epoque",
+  "description": "Event Schedule for Epoque@Prastuti 2026 - KIET",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030308",
+  "theme_color": "#050510",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
