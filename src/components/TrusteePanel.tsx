@@ -40,6 +40,7 @@ export function TrusteePanel({ session, allDays, delayMap, onClose, onLogout, on
   const [trusteeList, setTrusteeList] = useState<TrusteeRecord[]>([]);
   const [loadingTrustees, setLoadingTrustees] = useState(false);
   const [removingTrusteeId, setRemovingTrusteeId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Flatten all events with day info for the dropdown
   const allEvents = useMemo(() => {
@@ -532,27 +533,43 @@ export function TrusteePanel({ session, allDays, delayMap, onClose, onLogout, on
                             <p className="text-[10px] text-gray-500 font-mono">{t.code} • {t.library_id}</p>
                           </div>
                           {t.code !== "EPOQUE2026" && (
-                            <button
-                              onClick={async () => {
-                                if (!confirm(`Remove ${t.name}?`)) return;
-                                setRemovingTrusteeId(t.id);
-                                const result = await removeTrustee(t.id);
-                                if (result.success) {
-                                  setTrusteeList(prev => prev.filter(x => x.id !== t.id));
-                                } else {
-                                  setError(result.error || "Failed to remove.");
-                                }
-                                setRemovingTrusteeId(null);
-                              }}
-                              disabled={removingTrusteeId === t.id}
-                              className="ml-2 p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-40 shrink-0"
-                            >
-                              {removingTrusteeId === t.id ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
+                            confirmDeleteId === t.id ? (
+                              <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                                <span className="text-[10px] text-red-400 font-display">Sure?</span>
+                                <button
+                                  onClick={async () => {
+                                    setRemovingTrusteeId(t.id);
+                                    const result = await removeTrustee(t.id);
+                                    if (result.success) {
+                                      setTrusteeList(prev => prev.filter(x => x.id !== t.id));
+                                    } else {
+                                      setError(result.error || "Failed to remove.");
+                                    }
+                                    setRemovingTrusteeId(null);
+                                    setConfirmDeleteId(null);
+                                  }}
+                                  disabled={removingTrusteeId === t.id}
+                                  className="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-400 text-[10px] font-display font-bold hover:bg-red-500/30 transition-colors disabled:opacity-40"
+                                >
+                                  {removingTrusteeId === t.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : "Yes"}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="px-2.5 py-1 rounded-lg bg-white/5 text-gray-400 text-[10px] font-display hover:bg-white/10 transition-colors"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeleteId(t.id)}
+                                className="ml-2 p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors shrink-0"
+                              >
                                 <Trash2 className="w-3.5 h-3.5" />
-                              )}
-                            </button>
+                              </button>
+                            )
                           )}
                         </div>
                       ))}
