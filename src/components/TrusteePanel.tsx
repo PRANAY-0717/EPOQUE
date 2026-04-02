@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, Clock, AlertTriangle, CheckCircle, Loader2, ChevronDown, Timer, RotateCcw, UserPlus, Copy, Check } from "lucide-react";
-import { submitDelayUpdate, removeDelay, addTrustee, type TrusteeSession, type DelayUpdate, type NewTrusteeCredentials } from "@/lib/trustee-utils";
+import { X, Clock, AlertTriangle, CheckCircle, Loader2, ChevronDown, Timer, RotateCcw, UserPlus, Copy, Check, Trash2, Users } from "lucide-react";
+import { submitDelayUpdate, removeDelay, addTrustee, fetchAllTrustees, removeTrustee, type TrusteeSession, type DelayUpdate, type NewTrusteeCredentials, type TrusteeRecord } from "@/lib/trustee-utils";
 import { type DaySchedule, formatTime } from "@/lib/event-utils";
 
 interface TrusteePanelProps {
@@ -34,6 +34,12 @@ export function TrusteePanel({ session, allDays, delayMap, onClose, onLogout, on
   const [addingTrustee, setAddingTrustee] = useState(false);
   const [newCredentials, setNewCredentials] = useState<NewTrusteeCredentials | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // ─── Admin: Manage Trustees state ──
+  const [showManageTrustees, setShowManageTrustees] = useState(false);
+  const [trusteeList, setTrusteeList] = useState<TrusteeRecord[]>([]);
+  const [loadingTrustees, setLoadingTrustees] = useState(false);
+  const [removingTrusteeId, setRemovingTrusteeId] = useState<string | null>(null);
 
   // Flatten all events with day info for the dropdown
   const allEvents = useMemo(() => {
@@ -475,6 +481,82 @@ export function TrusteePanel({ session, allDays, delayMap, onClose, onLogout, on
                         )}
                       </button>
                     </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* ─── Admin: Manage Trustees ─── */}
+          {isAdmin && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <button
+                onClick={async () => {
+                  const next = !showManageTrustees;
+                  setShowManageTrustees(next);
+                  if (next) {
+                    setLoadingTrustees(true);
+                    const list = await fetchAllTrustees();
+                    setTrusteeList(list);
+                    setLoadingTrustees(false);
+                  }
+                }}
+                className="flex items-center gap-2 text-xs text-neon-cyan hover:text-white font-display tracking-wide transition-colors mb-3"
+              >
+                <Users className="w-3.5 h-3.5" />
+                {showManageTrustees ? "Hide Trustees" : "Manage Trustees"}
+              </button>
+
+              {showManageTrustees && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="overflow-hidden"
+                >
+                  {loadingTrustees ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                      <span className="text-xs text-gray-400 ml-2 font-display">Loading...</span>
+                    </div>
+                  ) : trusteeList.length === 0 ? (
+                    <p className="text-xs text-gray-500 font-display py-3">No trustees found.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                      {trusteeList.map((t) => (
+                        <div
+                          key={t.id}
+                          className="flex items-center justify-between bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-white font-display font-semibold truncate">{t.name}</p>
+                            <p className="text-[10px] text-gray-500 font-mono">{t.code} • {t.library_id}</p>
+                          </div>
+                          {t.code !== "EPOQUE2026" && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Remove ${t.name}?`)) return;
+                                setRemovingTrusteeId(t.id);
+                                const result = await removeTrustee(t.id);
+                                if (result.success) {
+                                  setTrusteeList(prev => prev.filter(x => x.id !== t.id));
+                                } else {
+                                  setError(result.error || "Failed to remove.");
+                                }
+                                setRemovingTrusteeId(null);
+                              }}
+                              disabled={removingTrusteeId === t.id}
+                              className="ml-2 p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-40 shrink-0"
+                            >
+                              {removingTrusteeId === t.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </motion.div>
               )}

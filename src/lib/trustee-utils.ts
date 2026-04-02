@@ -204,6 +204,46 @@ export async function addTrustee(
   }
 }
 
+// ─── Admin: List All Trustees ─────────────────────────
+
+export type TrusteeRecord = {
+  id: string;
+  code: string;
+  name: string;
+  library_id: string;
+  is_active: boolean;
+};
+
+export async function fetchAllTrustees(): Promise<TrusteeRecord[]> {
+  try {
+    const { data, error } = await supabase
+      .from("trustees")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+    return data as TrusteeRecord[];
+  } catch {
+    return [];
+  }
+}
+
+// ─── Admin: Remove Trustee ────────────────────────────
+
+export async function removeTrustee(trusteeId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("trustees")
+      .delete()
+      .eq("id", trusteeId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch {
+    return { success: false, error: "Network error." };
+  }
+}
+
 // ─── Time Helpers (internal) ───────────────────────────
 
 function timeDiffMinutes(start: string, end: string): number {
