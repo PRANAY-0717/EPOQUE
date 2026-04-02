@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { getEventStatus } from "@/lib/event-utils";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { getEventStatus, type MergedEventItem } from "@/lib/event-utils";
+import { fetchDelayUpdates, mergeEventUpdates, type DelayUpdate, type TrusteeSession } from "@/lib/trustee-utils";
 import scheduleData from "@/data/schedule.json";
 import { DaySelector } from "@/components/DaySelector";
 import { VenueSelector } from "@/components/VenueSelector";
 import { EventGrid } from "@/components/EventGrid";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, QrCode } from "lucide-react";
+import { Search, QrCode, ShieldCheck, ChevronRight } from "lucide-react";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import { QRModal } from "@/components/QRModal";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { TrusteeAccessModal } from "@/components/TrusteeAccessModal";
+import { TrusteePanel } from "@/components/TrusteePanel";
 
 export function ScheduleClient() {
   const [showSplash, setShowSplash] = useState(true);
@@ -21,13 +24,52 @@ export function ScheduleClient() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
 
+  // ─── Trustee System State ────────────────────────────
+  const [isTrusteeModalOpen, setIsTrusteeModalOpen] = useState(false);
+  const [isTrusteePanelOpen, setIsTrusteePanelOpen] = useState(false);
+  const [trusteeSession, setTrusteeSession] = useState<TrusteeSession | null>(null);
+  const [delayMap, setDelayMap] = useState<Map<string, DelayUpdate>>(new Map());
+
   // Splash timer
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Live Now logic
+  // ─── Restore trustee session from sessionStorage ─────
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("trustee-session");
+      if (stored) {
+        setTrusteeSession(JSON.parse(stored));
+      }
+    } catch { /* ignore parse errors */ }
+  }, []);
+
+  // ─── Fetch delay updates from Supabase (non-blocking) ─
+  const refreshDelays = useCallback(async () => {
+    try {
+      const map = await fetchDelayUpdates();
+      setDelayMap(map);
+    } catch { /* graceful fallback — no Supabase = no delays */ }
+  }, []);
+
+  // Fetch on mount + poll every 30s so ALL users see delay updates live
+  useEffect(() => {
+    refreshDelays();
+    const interval = setInterval(refreshDelays, 30000);
+    return () => clearInterval(interval);
+  }, [refreshDelays]);
+
+  // ─── Merge delays into schedule data ─────────────────
+  const mergedScheduleData = useMemo(() => {
+    return scheduleData.map(day => ({
+      ...day,
+      events: mergeEventUpdates(day.events, delayMap),
+    }));
+  }, [delayMap]);
+
+  // Live Now logic — uses merged data
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60000);
@@ -35,8 +77,8 @@ export function ScheduleClient() {
   }, []);
 
   const liveEvents = useMemo(() => {
-    const live: any[] = [];
-    scheduleData.forEach(d => {
+    const live: (MergedEventItem & { dateStr: string })[] = [];
+    mergedScheduleData.forEach(d => {
       d.events.forEach(e => {
         const [startH, startM] = e.start.split(":").map(Number);
         const [endH, endM] = e.end.split(":").map(Number);
@@ -48,13 +90,14 @@ export function ScheduleClient() {
       });
     });
     return live;
-  }, [now]);
+  }, [now, mergedScheduleData]);
 
-  const currentDay = scheduleData[selectedDayIdx];
+  const currentDay = mergedScheduleData[selectedDayIdx];
   const allVenuesList = currentDay.events.map((e) => e.venue);
   const uniqueVenues = ["All Venues", ...Array.from(new Set(allVenuesList))];
 
-  useMemo(() => {
+  // Reset venue if current selection doesn't exist for new day
+  useEffect(() => {
     if (selectedVenue !== "All Venues" && !uniqueVenues.includes(selectedVenue)) {
       setSelectedVenue("All Venues");
     }
@@ -74,6 +117,33 @@ export function ScheduleClient() {
     if (diff !== 0) return diff;
     return a.start.localeCompare(b.start);
   });
+
+  // ─── Trustee handlers ────────────────────────────────
+  const handleTrusteeVerified = (session: TrusteeSession) => {
+    setTrusteeSession(session);
+    setIsTrusteeModalOpen(false);
+    setIsTrusteePanelOpen(true);
+  };
+
+  const handleTrusteeLogout = () => {
+    sessionStorage.removeItem("trustee-session");
+    setTrusteeSession(null);
+    setIsTrusteePanelOpen(false);
+  };
+
+  const handleDelaySubmitted = () => {
+    // Refetch delay data after a new update is submitted
+    refreshDelays();
+  };
+
+  const handleCoordinatorClick = () => {
+    if (trusteeSession) {
+      // Already verified — go straight to panel
+      setIsTrusteePanelOpen(true);
+    } else {
+      setIsTrusteeModalOpen(true);
+    }
+  };
 
   return (
     <>
@@ -185,6 +255,9 @@ export function ScheduleClient() {
                     <div className="min-w-0">
                       <h3 className="font-display font-bold text-white text-sm md:text-base truncate">{le.name}</h3>
                       <p className="text-xs text-gray-400">{le.venue}</p>
+                      {le.delayMinutes && le.delayMinutes > 0 && (
+                        <p className="text-[10px] text-red-400 mt-0.5 font-display">Delayed by {le.delayMinutes}m</p>
+                      )}
                     </div>
                     <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-red-400 shrink-0 ml-2">
                       <span className="text-[10px] font-bold leading-none">GO</span>
@@ -198,7 +271,7 @@ export function ScheduleClient() {
 
         {/* Day Selector */}
         <DaySelector 
-          days={scheduleData.map(d => ({ day: d.day, date: d.date }))} 
+          days={mergedScheduleData.map(d => ({ day: d.day, date: d.date }))} 
           selectedIdx={selectedDayIdx} 
           onSelect={setSelectedDayIdx} 
         />
@@ -274,11 +347,47 @@ export function ScheduleClient() {
           <svg className="w-4 h-4 text-gray-400 group-hover:text-neon-pink transition-colors" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
           <span className="text-xs font-display text-gray-400 group-hover:text-white transition-colors tracking-wide">Follow @pranay_codes_717</span>
         </a>
+
+        {/* ─── Coordinator Entry Point ─── */}
+        <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mt-2" />
+        <button
+          onClick={handleCoordinatorClick}
+          className="group flex items-center gap-2 text-gray-500 hover:text-neon-cyan transition-colors active:scale-95"
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span className="text-xs font-display tracking-wide">
+            {trusteeSession ? `Trustee: ${trusteeSession.name}` : "Are you a trustee?"}
+          </span>
+          <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+        </button>
       </footer>
 
-      {isSearchOpen && <SearchOverlay allDays={scheduleData} onClose={() => setIsSearchOpen(false)} />}
+      {isSearchOpen && <SearchOverlay allDays={mergedScheduleData} onClose={() => setIsSearchOpen(false)} />}
       {isQROpen && <QRModal onClose={() => setIsQROpen(false)} />}
       <InstallPrompt />
+
+      {/* Trustee Modals */}
+      <AnimatePresence>
+        {isTrusteeModalOpen && (
+          <TrusteeAccessModal
+            onClose={() => setIsTrusteeModalOpen(false)}
+            onVerified={handleTrusteeVerified}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isTrusteePanelOpen && trusteeSession && (
+          <TrusteePanel
+            session={trusteeSession}
+            allDays={scheduleData}
+            delayMap={delayMap}
+            onClose={() => setIsTrusteePanelOpen(false)}
+            onLogout={handleTrusteeLogout}
+            onUpdateSubmitted={handleDelaySubmitted}
+          />
+        )}
+      </AnimatePresence>
     </div>
     </>
   );

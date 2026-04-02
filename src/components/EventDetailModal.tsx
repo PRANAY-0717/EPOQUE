@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { EventItem, formatTime, getDurationMinutes } from "@/lib/event-utils";
-import { X, MapPin, Clock, Calendar } from "lucide-react";
+import { MergedEventItem, formatTime, getDurationMinutes } from "@/lib/event-utils";
+import { X, MapPin, Clock, Calendar, AlertCircle } from "lucide-react";
 import { useEffect } from "react";
 
 interface EventDetailModalProps {
-  event: EventItem;
+  event: MergedEventItem;
   dateStr: string;
   onClose: () => void;
 }
@@ -21,6 +21,7 @@ export function EventDetailModal({ event, dateStr, onClose }: EventDetailModalPr
 
   const duration = getDurationMinutes(event.start, event.end);
   const formattedDate = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const isDelayed = !!(event.delayMinutes && event.delayMinutes > 0);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center">
@@ -64,6 +65,21 @@ export function EventDetailModal({ event, dateStr, onClose }: EventDetailModalPr
           <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-5 md:mb-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] leading-tight">
             {event.name}
           </h2>
+
+          {/* Delay notice */}
+          {isDelayed && (
+            <div className="flex items-center gap-2.5 mb-4 px-3.5 py-3 bg-red-500/[0.08] border border-red-500/25 rounded-xl">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <div>
+                <p className="text-xs text-red-400 font-display font-semibold">Delayed by {event.delayMinutes} minutes</p>
+                {event.originalStart && (
+                  <p className="text-[10px] text-gray-500 font-display mt-0.5">
+                    Originally at {formatTime(event.originalStart)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className="flex flex-col gap-3 md:gap-4 text-gray-300">
             <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 text-sm md:text-base">

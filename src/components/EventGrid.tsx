@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { EventItem } from "@/lib/event-utils";
+import { MergedEventItem } from "@/lib/event-utils";
 import { EventCard } from "./EventCard";
 import { EventDetailModal } from "./EventDetailModal";
+import { DelayInfoModal } from "./DelayInfoModal";
 
 interface EventGridProps {
-  events: EventItem[];
+  events: MergedEventItem[];
   currentDayDate: string;
 }
 
@@ -27,7 +28,8 @@ const item: Variants = {
 };
 
 export function EventGrid({ events, currentDayDate }: EventGridProps) {
-  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<MergedEventItem | null>(null);
+  const [delayInfoEvent, setDelayInfoEvent] = useState<MergedEventItem | null>(null);
 
   return (
     <>
@@ -49,6 +51,7 @@ export function EventGrid({ events, currentDayDate }: EventGridProps) {
                 event={event} 
                 currentDayDate={currentDayDate} 
                 onClick={() => setSelectedEvent(event)}
+                onDelayInfoClick={event.delayMinutes ? () => setDelayInfoEvent(event) : undefined}
               />
             </motion.div>
           ))}
@@ -61,6 +64,15 @@ export function EventGrid({ events, currentDayDate }: EventGridProps) {
             event={selectedEvent} 
             dateStr={currentDayDate} 
             onClose={() => setSelectedEvent(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {delayInfoEvent && (
+          <DelayInfoModal
+            event={delayInfoEvent}
+            onClose={() => setDelayInfoEvent(null)}
           />
         )}
       </AnimatePresence>

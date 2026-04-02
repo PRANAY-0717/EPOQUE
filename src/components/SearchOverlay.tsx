@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, MapPin, Clock } from "lucide-react";
-import { DaySchedule, formatTime } from "@/lib/event-utils";
+import { DaySchedule, MergedEventItem, formatTime } from "@/lib/event-utils";
 import { EventDetailModal } from "./EventDetailModal";
 
 interface SearchOverlayProps {
@@ -13,7 +13,7 @@ interface SearchOverlayProps {
 
 export function SearchOverlay({ allDays, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<(MergedEventItem & { dateStr: string; dayName: string }) | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -26,7 +26,7 @@ export function SearchOverlay({ allDays, onClose }: SearchOverlayProps) {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
     
-    const results: any[] = [];
+    const results: (MergedEventItem & { dateStr: string; dayName: string })[] = [];
     allDays.forEach(day => {
       day.events.forEach(event => {
         if (
@@ -98,11 +98,19 @@ export function SearchOverlay({ allDays, onClose }: SearchOverlayProps) {
                     <div className="flex items-center gap-1.5 md:gap-2">
                       <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-neon-blue shrink-0" />
                       <span>{formatTime(result.start)} - {formatTime(result.end)}</span>
+                      {result.originalStart && (
+                        <span className="text-[10px] text-gray-500 line-through ml-1">{formatTime(result.originalStart)}</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-2">
                       <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-neon-pink shrink-0" />
                       <span>{result.venue}</span>
                     </div>
+                    {result.delayMinutes && result.delayMinutes > 0 && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] md:text-xs text-red-400 font-display font-medium">🔴 Delayed by {result.delayMinutes}m</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

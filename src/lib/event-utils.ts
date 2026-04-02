@@ -14,6 +14,14 @@ export type DaySchedule = {
 
 export type EventStatus = "upcoming" | "ongoing" | "completed";
 
+// Extended event type carrying optional delay metadata from Supabase merges
+export type MergedEventItem = EventItem & {
+  originalStart?: string;
+  delayMinutes?: number;
+  delayedBy?: string;
+  delayedByLibraryId?: string;
+};
+
 // To make testing easier, we can pass a 'now' parameter, otherwise it defaults to new Date()
 export function getEventStatus(event: EventItem, dateStr: string, now: Date = new Date()): EventStatus {
   const [startH, startM] = event.start.split(":").map(Number);

@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatTime, getDurationMinutes, getEventStatus, EventStatus, EventItem } from "@/lib/event-utils";
-import { Clock, MapPin, CalendarClock } from "lucide-react";
+import { formatTime, getDurationMinutes, getEventStatus, EventStatus, MergedEventItem } from "@/lib/event-utils";
+import { Clock, MapPin, CalendarClock, Info } from "lucide-react";
 
 interface EventCardProps {
-  event: EventItem;
+  event: MergedEventItem;
   currentDayDate: string;
   onClick: () => void;
+  onDelayInfoClick?: () => void;
 }
 
-export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
+export function EventCard({ event, currentDayDate, onClick, onDelayInfoClick }: EventCardProps) {
   const [status, setStatus] = useState<EventStatus>("upcoming");
   const [countdownStr, setCountdownStr] = useState<string>("");
+
+  const isDelayed = !!(event.delayMinutes && event.delayMinutes > 0);
 
   useEffect(() => {
     const updateTime = () => {
@@ -57,7 +60,8 @@ export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
 
   return (
     <div 
-      className={`group h-full flex flex-col glass-panel rounded-xl md:rounded-2xl p-5 md:p-6 md:hover:-translate-y-1 transition-all duration-300 relative touch-manipulation ${status === "completed" ? "opacity-50" : ""}`}
+      onClick={onClick}
+      className={`group h-full flex flex-col glass-panel rounded-xl md:rounded-2xl p-5 md:p-6 md:hover:-translate-y-1 transition-all duration-300 relative touch-manipulation cursor-pointer ${status === "completed" ? "opacity-50" : ""}`}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-neon-blue/0 to-neon-purple/0 group-hover:from-neon-blue/10 group-hover:to-neon-purple/10 transition-colors duration-500 rounded-xl md:rounded-2xl pointer-events-none" />
       <div className="absolute -inset-[1px] bg-gradient-to-r from-neon-cyan/50 via-neon-purple/50 to-neon-red/50 opacity-0 group-hover:opacity-100 rounded-xl md:rounded-2xl blur-sm transition-opacity duration-500 z-[-1]" />
@@ -79,6 +83,26 @@ export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
         </div>
       </div>
 
+      {/* Delay Badge */}
+      {isDelayed && (
+        <div className="flex items-center justify-between gap-2 mb-3 relative z-10">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400">
+            <span className="text-[10px] md:text-xs font-display font-semibold tracking-wide">
+              🔴 Delayed by {event.delayMinutes}m
+            </span>
+          </div>
+          {onDelayInfoClick && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelayInfoClick(); }}
+              className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-neon-cyan/30 text-gray-400 hover:text-neon-cyan transition-all active:scale-90"
+              title="View delay details"
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="flex-1 relative z-10">
         <h3 className="text-lg md:text-xl font-display font-bold text-white mb-1 md:mb-2 group-hover:text-neon-cyan transition-colors leading-snug">{event.name}</h3>
@@ -86,7 +110,14 @@ export function EventCard({ event, currentDayDate, onClick }: EventCardProps) {
         <div className="flex flex-col gap-2 md:gap-2.5 mt-3 md:mt-4 text-sm md:text-base">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 md:w-[18px] md:h-[18px] text-neon-blue shrink-0" />
-            <span className="text-gray-200 font-medium">{formatTime(event.start)} - {formatTime(event.end)}</span>
+            <span className="text-gray-200 font-medium">
+              {formatTime(event.start)} - {formatTime(event.end)}
+            </span>
+            {isDelayed && event.originalStart && (
+              <span className="text-[10px] text-gray-500 line-through ml-1">
+                {formatTime(event.originalStart)}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 md:w-[18px] md:h-[18px] text-neon-purple shrink-0" />
