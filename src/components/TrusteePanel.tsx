@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, Clock, AlertTriangle, CheckCircle, Loader2, ChevronDown, Timer, RotateCcw } from "lucide-react";
-import { submitDelayUpdate, removeDelay, type TrusteeSession, type DelayUpdate } from "@/lib/trustee-utils";
+import { X, Clock, AlertTriangle, CheckCircle, Loader2, ChevronDown, Timer, RotateCcw, UserPlus, Copy, Check } from "lucide-react";
+import { submitDelayUpdate, removeDelay, addTrustee, type TrusteeSession, type DelayUpdate, type NewTrusteeCredentials } from "@/lib/trustee-utils";
 import { type DaySchedule, formatTime } from "@/lib/event-utils";
 
 interface TrusteePanelProps {
@@ -25,6 +25,15 @@ export function TrusteePanel({ session, allDays, delayMap, onClose, onLogout, on
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [removingDelay, setRemovingDelay] = useState(false);
+
+  // ─── Admin: Add Trustee state (only for EPOQUE2026) ──
+  const isAdmin = session.code === "EPOQUE2026";
+  const [showAddTrustee, setShowAddTrustee] = useState(false);
+  const [newTrusteeName, setNewTrusteeName] = useState("");
+  const [newTrusteeRoll, setNewTrusteeRoll] = useState("");
+  const [addingTrustee, setAddingTrustee] = useState(false);
+  const [newCredentials, setNewCredentials] = useState<NewTrusteeCredentials | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Flatten all events with day info for the dropdown
   const allEvents = useMemo(() => {
@@ -364,6 +373,112 @@ export function TrusteePanel({ session, allDays, delayMap, onClose, onLogout, on
                 </>
               )}
             </button>
+          )}
+
+          {/* ─── Admin: Add New Trustee (PRANAY only) ─── */}
+          {isAdmin && (
+            <div className="mt-6 pt-5 border-t border-white/10">
+              <button
+                onClick={() => { setShowAddTrustee(!showAddTrustee); setNewCredentials(null); setError(""); }}
+                className="flex items-center gap-2 text-xs text-neon-pink hover:text-white font-display tracking-wide transition-colors mb-3"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                {showAddTrustee ? "Hide" : "Add New Trustee"}
+              </button>
+
+              {showAddTrustee && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-3 mb-4">
+                    <div>
+                      <label className="text-[11px] text-gray-400 font-display mb-1.5 block tracking-wide">PERSON NAME</label>
+                      <input
+                        type="text"
+                        value={newTrusteeName}
+                        onChange={(e) => setNewTrusteeName(e.target.value.toUpperCase())}
+                        placeholder="e.g. ADITYA KUMAR"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white outline-none focus:border-neon-pink/50 focus:bg-white/[0.07] transition-all font-display placeholder:text-gray-600 uppercase"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-gray-400 font-display mb-1.5 block tracking-wide">ROLL / LIBRARY ID</label>
+                      <input
+                        type="text"
+                        value={newTrusteeRoll}
+                        onChange={(e) => setNewTrusteeRoll(e.target.value)}
+                        placeholder="e.g. 2428CSEAI1150"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white outline-none focus:border-neon-pink/50 focus:bg-white/[0.07] transition-all font-display placeholder:text-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      setError("");
+                      setNewCredentials(null);
+                      if (!newTrusteeName.trim() || !newTrusteeRoll.trim()) {
+                        setError("Both fields are required.");
+                        return;
+                      }
+                      setAddingTrustee(true);
+                      const result = await addTrustee(newTrusteeName, newTrusteeRoll);
+                      if (result.success && result.credentials) {
+                        setNewCredentials(result.credentials);
+                        setNewTrusteeName("");
+                        setNewTrusteeRoll("");
+                      } else {
+                        setError(result.error || "Failed to add trustee.");
+                      }
+                      setAddingTrustee(false);
+                    }}
+                    disabled={addingTrustee}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-neon-pink to-neon-purple text-white font-display font-bold text-sm tracking-wide active:scale-[0.97] transition-transform disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,0,128,0.15)]"
+                  >
+                    {addingTrustee ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /><span>Adding...</span></>
+                    ) : (
+                      <><UserPlus className="w-4 h-4" /><span>Generate & Add Trustee</span></>
+                    )}
+                  </button>
+
+                  {/* Generated Credentials Card */}
+                  {newCredentials && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 p-4 bg-green-500/[0.07] border border-green-500/30 rounded-xl"
+                    >
+                      <p className="text-xs text-green-400 font-display font-bold mb-3 flex items-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5" /> Trustee Created! Share these credentials:
+                      </p>
+                      <div className="bg-black/30 rounded-lg p-3 font-mono text-xs text-white space-y-1.5">
+                        <p>Trustee Code: <span className="text-neon-cyan font-bold">{newCredentials.code}</span></p>
+                        <p>Name: <span className="text-neon-cyan font-bold">{newCredentials.name}</span></p>
+                        <p>Library ID: <span className="text-neon-cyan font-bold">{newCredentials.library_id}</span></p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const text = `EPOQUE Trustee Credentials\n\nCode: ${newCredentials.code}\nName: ${newCredentials.name}\nLibrary ID: ${newCredentials.library_id}\n\nUse these to log in at the schedule website.`;
+                          navigator.clipboard.writeText(text);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="mt-3 w-full py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 font-display text-xs tracking-wide active:scale-95 transition-all hover:bg-white/10 flex items-center justify-center gap-1.5"
+                      >
+                        {copied ? (
+                          <><Check className="w-3.5 h-3.5 text-green-400" /><span className="text-green-400">Copied!</span></>
+                        ) : (
+                          <><Copy className="w-3.5 h-3.5" /><span>Copy Credentials</span></>
+                        )}
+                      </button>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </div>
           )}
         </div>
       </motion.div>

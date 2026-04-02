@@ -159,6 +159,51 @@ export async function removeDelay(eventId: string): Promise<{ success: boolean; 
   }
 }
 
+// ─── Admin: Add New Trustee ───────────────────────────
+
+function generateTrusteeCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "EPQ-";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+export type NewTrusteeCredentials = {
+  code: string;
+  name: string;
+  library_id: string;
+};
+
+export async function addTrustee(
+  name: string,
+  libraryId: string
+): Promise<{ success: boolean; credentials?: NewTrusteeCredentials; error?: string }> {
+  const code = generateTrusteeCode();
+  const upperName = name.toUpperCase().trim();
+  const trimId = libraryId.trim();
+
+  if (!upperName || !trimId) {
+    return { success: false, error: "Name and Library ID are required." };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("trustees")
+      .insert({ code, name: upperName, library_id: trimId, is_active: true });
+
+    if (error) return { success: false, error: error.message };
+
+    return {
+      success: true,
+      credentials: { code, name: upperName, library_id: trimId },
+    };
+  } catch {
+    return { success: false, error: "Network error." };
+  }
+}
+
 // ─── Time Helpers (internal) ───────────────────────────
 
 function timeDiffMinutes(start: string, end: string): number {
