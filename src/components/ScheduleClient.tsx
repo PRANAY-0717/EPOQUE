@@ -36,6 +36,16 @@ export function ScheduleClient() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Auto-select the current day if it exists in the schedule
+  useEffect(() => {
+    const today = new Date();
+    const localDateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const idx = scheduleData.findIndex(d => d.date === localDateStr);
+    if (idx !== -1) {
+      setSelectedDayIdx(idx);
+    }
+  }, []);
+
   // ─── Restore trustee session from localStorage ─────
   useEffect(() => {
     try {
