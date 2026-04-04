@@ -14,6 +14,7 @@ import { QRModal } from "@/components/QRModal";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { TrusteeAccessModal } from "@/components/TrusteeAccessModal";
 import { TrusteePanel } from "@/components/TrusteePanel";
+import { RatingModal } from "@/components/RatingModal";
 
 export function ScheduleClient() {
   const [showSplash, setShowSplash] = useState(true);
@@ -398,6 +399,8 @@ export function ScheduleClient() {
           />
         )}
       </AnimatePresence>
+
+      <RatingModal showSplash={showSplash} />
     </div>
     </>
   );
